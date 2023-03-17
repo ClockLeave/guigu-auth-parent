@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class MenuHepler {
     //生成树状
-    public List<SysMenu> buildTree(List<SysMenu> list) {
+    public static List<SysMenu> buildTree(List<SysMenu> list) {
         List<SysMenu> tree = new ArrayList<>();
         for (SysMenu sysMenu : list) {
             if ((sysMenu.getParentId().longValue() == 0)) {
@@ -22,7 +22,7 @@ public class MenuHepler {
         return tree;
     }
 
-    private SysMenu findChildren(SysMenu sysMenu, List<SysMenu> list) {
+    private static SysMenu findChildren(SysMenu sysMenu, List<SysMenu> list) {
         sysMenu.setChildren(new ArrayList<>());
         for (SysMenu menu : list) {
             if (menu.getParentId().longValue()==Long.parseLong(sysMenu.getId())) {
