@@ -1,9 +1,20 @@
 package com.atguigu.system.controller;
 
 import com.atguigu.common.result.Result;
+import com.atguigu.common.utils.JwtHelper;
+import com.atguigu.common.utils.MD5;
+import com.atguigu.model.system.SysUser;
+import com.atguigu.model.vo.LoginVo;
+import com.atguigu.model.vo.SysUserQueryVo;
+import com.atguigu.system.exception.GuiguException;
+import com.atguigu.system.service.SysUserService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpRequest;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,11 +27,29 @@ import java.util.Map;
 @RestController
 @RequestMapping("/admin/system/index")
 public class IndexController {
+    @Autowired
+    SysUserService sysUserService;
     //{"code":20000,"data":{"token":"admin-token"}}
     @PostMapping("/login")
-    public Result login(){
+    public Result login(@RequestBody LoginVo loginVo){
+
+        String username = loginVo.getUsername();
+        String password = MD5.encrypt(loginVo.getPassword());
+
+        SysUser sysUser = sysUserService.getUserInfoByUsername(username);
+        if (sysUser==null){
+            throw  new GuiguException(20001,"用户名不存在");
+        }
+        if(!sysUser.getPassword().equals(password)){
+            throw new GuiguException(20001,"密码错误");
+        }
+        if (sysUser.getStatus().intValue()==0){
+            throw new GuiguException(20001,"用户已被禁用，请联系管理员");
+        }
+
+        String token = JwtHelper.createToken(sysUser.getId(), sysUser.getUsername());
         Map<String, Object> map = new HashMap<>();
-        map.put("token","admin-token");
+        map.put("token",token);
         return Result.ok(map);
     }
 
@@ -36,12 +65,10 @@ public class IndexController {
     }
     * */
     @GetMapping("/info")
-    public Result info(){
-        Map<String, Object> map = new HashMap<>();
-        map.put("roles", Arrays.asList("admin"));
-        map.put("introduction","I am a super administrator");
-        map.put("avatar","https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif");
-        map.put("name","Super Admin");
+    public Result info(HttpServletRequest request){
+        String token = request.getHeader("token");
+        String username = JwtHelper.getUsername(token);
+        Map<String, Object> map =sysUserService.getUserInfo(username);
         return Result.ok(map);
     }
 }

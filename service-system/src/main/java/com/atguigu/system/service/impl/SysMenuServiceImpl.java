@@ -4,11 +4,13 @@ package com.atguigu.system.service.impl;
 import com.atguigu.model.system.SysMenu;
 import com.atguigu.model.system.SysRoleMenu;
 import com.atguigu.model.vo.AssginMenuVo;
+import com.atguigu.model.vo.RouterVo;
 import com.atguigu.system.exception.GuiguException;
 import com.atguigu.system.mapper.SysMenuMapper;
 import com.atguigu.system.mapper.SysRoleMenuMapper;
 import com.atguigu.system.service.SysMenuService;
 import com.atguigu.system.util.MenuHepler;
+import com.atguigu.system.util.RouterHelper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,8 +85,43 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             sysRoleMenu.setMenuId(menuId);
             sysRoleMenuMapper.insert(sysRoleMenu);
         }
+    }
 
+    @Override
+    public List<String> getButtonList(String id) {
+        List<SysMenu> sysMenus=null;
+        if ("1".equals(id)) {
+            QueryWrapper<SysMenu> wrapper = new QueryWrapper<>();
+            wrapper.eq("status",1);
+            sysMenus=baseMapper.selectList(wrapper);
+        }else {
+            sysMenus = baseMapper.findMenuListByUserId(id);
+        }
 
+        List<String> permissionList = new ArrayList<>();
+
+        for (SysMenu sysMenu : sysMenus) {
+            if (sysMenu.getType()==2) {
+                permissionList.add(sysMenu.getPerms());
+            }
+        }
+        return permissionList;
+    }
+
+    @Override
+    public List<RouterVo> getUserMenuList(String id) {
+        List<SysMenu> sysMenus =null;
+        if ("1".equals(id)){
+            QueryWrapper<SysMenu> wrapper = new QueryWrapper<>();
+            wrapper.eq("status",1);
+            wrapper.orderByAsc("sort_value");
+            sysMenus = baseMapper.selectList(wrapper);
+        }else {
+            sysMenus=baseMapper.findMenuListByUserId(id);
+        }
+        List<SysMenu> tree = MenuHepler.buildTree(sysMenus);
+        List<RouterVo> routers = RouterHelper.buildRouters(tree);
+        return routers;
     }
 
 }

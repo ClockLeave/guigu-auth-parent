@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Map;
+
 /**
  * <p>
  * 用户表 服务类
@@ -20,4 +22,8 @@ public interface SysUserService extends IService<SysUser> {
     IPage<SysUser> selectPage(Page<SysUser> pageParam,  SysUserQueryVo sysUserQueryVo);
 
     Boolean updateStatus(String id, Integer status);
+
+    SysUser getUserInfoByUsername(String username);
+
+    Map<String, Object> getUserInfo(String username);
 }
